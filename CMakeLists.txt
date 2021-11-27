@@ -39,5 +39,5 @@ endif()
 # add the executable
 add_executable(${PROJECT_NAME} ${SOURCES})
 
-target_link_libraries(${PROJECT_NAME} -lcurl)
+target_link_libraries(${PROJECT_NAME} -lcurl -lsqlite3)
 
