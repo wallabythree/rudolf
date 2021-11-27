@@ -4,6 +4,9 @@
 #include <sqlite3.h>
 #include <curl/curl.h>
 
+#define BASE_URL "https://adventofcode.com/%d/day/%d/input"
+#define COOKIEJAR "cookie.txt"
+
 typedef struct Response {
     CURLcode code;
     char* data;
@@ -56,16 +59,15 @@ static char* api_get_input(int year, int day)
     }
 
     // construct URL to query from base_url and the given year and day
-    static const char* base_url = "https://adventofcode.com/%d/day/%d/input";
-    size_t url_length = snprintf(NULL, 0, base_url, year, day) + 1;
+    size_t url_length = snprintf(NULL, 0, BASE_URL, year, day) + 1;
     char* url = malloc(url_length);
-    snprintf(url, url_length, base_url, year, day);
+    snprintf(url, url_length, BASE_URL, year, day);
 
     Response res = { 0 }; 
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void*) &res);
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &write_cb);
     curl_easy_setopt(curl, CURLOPT_URL, url);
-    curl_easy_setopt(curl, CURLOPT_COOKIEFILE, "cookie.txt");
+    curl_easy_setopt(curl, CURLOPT_COOKIEFILE, COOKIEJAR);
     
     res.code = curl_easy_perform(curl);
     if (res.code != CURLE_OK) {
@@ -75,8 +77,22 @@ static char* api_get_input(int year, int day)
             curl_easy_strerror(res.code)
         );
     }
+    long http_code = 0;
+    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
+    
     free(url);
     curl_easy_cleanup(curl);
+
+    if (http_code == 404) {
+        fprintf(
+            stderr, 
+            "HTTP code %ld received: %s\n",
+            http_code,
+            res.data
+        );
+        free(res.data);
+        return NULL;
+    }
 
     // add null terminator to response data
     char* input = realloc(res.data, res.size + 1);
@@ -142,7 +158,7 @@ static char* db_get_input(int year, int day)
   * @param day
   * @param input Pointer to char buffer containing puzzle input
   */ 
-void db_put_input(int year, int day, char* input)
+static void db_put_input(int year, int day, char* input)
 {
     sqlite3* db;
 
@@ -206,7 +222,9 @@ char* rudolf_get_input(int year, int day)
     char* input = db_get_input(year, day);
     if (!input) {
         input = api_get_input(year, day);
-        db_put_input(year, day, input);
+        if (!input) {
+            db_put_input(year, day, input);
+        }
     }
 
     return input;
@@ -214,9 +232,11 @@ char* rudolf_get_input(int year, int day)
 
 int main()
 {
-    char* input = rudolf_get_input(2020, 4);
-    printf("%s", input);
-    free(input);
+    char* input = rudolf_get_input(2020, 1);
+    if (input) {
+        printf("%s", input);
+        free(input);
+    }
 
     return 0;
 }
