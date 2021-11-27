@@ -176,12 +176,12 @@ static void db_put_input(int year, int day, char* input)
         input TEXT NOT NULL,\
         PRIMARY KEY (year, day)\
     )";
+
     sqlite3_stmt* res;
     rc = sqlite3_prepare_v2(db, table_query, -1, &res, 0);    
     if (rc != SQLITE_OK) {
         fprintf(stderr, "Failed to create table: %s\n", sqlite3_errmsg(db));
         sqlite3_close(db);
-        
         return;
     }
     
@@ -198,13 +198,14 @@ static void db_put_input(int year, int day, char* input)
             ?\
         )\
     ";
+
     rc = sqlite3_prepare_v2(db, insert_query, -1, &res, 0);    
     if (rc != SQLITE_OK) {
         fprintf(stderr, "Failed to insert record: %s\n", sqlite3_errmsg(db));
         sqlite3_close(db);
-        
         return;
     }
+
     sqlite3_bind_int(res, 1, year);
     sqlite3_bind_int(res, 2, day);
     sqlite3_bind_text(res, 3, input, -1, SQLITE_STATIC);
@@ -213,7 +214,7 @@ static void db_put_input(int year, int day, char* input)
 
     sqlite3_finalize(res);
     sqlite3_close(db);
-    
+
     return;
 }
 
@@ -222,7 +223,7 @@ char* rudolf_get_input(int year, int day)
     char* input = db_get_input(year, day);
     if (!input) {
         input = api_get_input(year, day);
-        if (!input) {
+        if (input) {
             db_put_input(year, day, input);
         }
     }
