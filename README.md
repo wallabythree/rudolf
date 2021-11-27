@@ -19,3 +19,5 @@ int main()
 }
 ```
 
+You must store your Advent of Code session cookie as `cookie.txt` (in the [Netscape cookie file format](https://curl.se/docs/http-cookies.html)) in the same directory as your executable.
+
