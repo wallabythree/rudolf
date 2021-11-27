@@ -1,6 +1,6 @@
 # rudolf
 
-Little helper library to retrieve puzzle input from [Advent of Code](https://adventofcode.com/) and store it in a local [SQLite](https://sqlite.org/) database.
+Little helper library to retrieve puzzle input from [Advent of Code](https://adventofcode.com/) and store it in a local SQLite database. Depends on [libcurl](https://curl.se/) and [libsqlite3](https://sqlite.org/).
 
 ## Usage
 
