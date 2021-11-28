@@ -11,9 +11,10 @@ int main()
 {
     // get puzzle input as one long string
     char* input = rudolf_get_input(2020, 8);
-    if (input) {
-        printf("%s", input);
+    if (!input) {
+        return 1;
     }
+    printf("%s", input);
 
     // split puzzle input into rows, then free input
     char** rows = NULL;
