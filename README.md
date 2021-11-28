@@ -6,7 +6,7 @@ Little helper library for [Advent of Code](https://adventofcode.com/) in C. Requ
 
 - `char* rudolf_get_input(int year, int day)`: retrieve puzzle input from https://adventofcode.com. Results are cached in a local SQLite database.
 - `int rudolf_split(char*** dest, char* input, const char* delimiters, size_t* count)`: split a string into an array of substrings with the given delimiters. Useful for splitting puzzle input into rows.
-- `double rudolf_time_fn(void (*fn)())`: measure execution time of a function in seconds.
+- `double rudolf_time_fn(void (*fn)())`: measure execution time of a parameterless function in seconds.
 
 ## Usage
 
