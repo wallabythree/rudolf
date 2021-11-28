@@ -85,7 +85,7 @@ static char* api_get_input(int year, int day)
     free(url);
     curl_easy_cleanup(curl);
 
-    if (http_code == 404) {
+    if (http_code != 200) {
         fprintf(
             stderr, 
             "HTTP code %ld received: %s\n",
@@ -139,10 +139,9 @@ static char* db_get_input(sqlite3* db, int year, int day)
     int rc = sqlite3_prepare_v2(db, query, -1, &res, 0);    
     if (rc != SQLITE_OK) {
         fprintf(stderr, "Failed to fetch data: %s\n", sqlite3_errmsg(db));
-        sqlite3_close(db);
-        
         return NULL;
     }
+
     sqlite3_bind_int(res, 1, year);
     sqlite3_bind_int(res, 2, day);
 
@@ -167,7 +166,7 @@ static char* db_get_input(sqlite3* db, int year, int day)
   * @param day
   * @param input Pointer to char buffer containing puzzle input
   */ 
-static void db_put_input(sqlite3* db, int year, int day, char* input)
+static int db_put_input(sqlite3* db, int year, int day, char* input)
 {
     const char table_query[] = "CREATE TABLE IF NOT EXISTS puzzles (\
         year INTEGER NOT NULL,\
@@ -180,8 +179,7 @@ static void db_put_input(sqlite3* db, int year, int day, char* input)
     int rc = sqlite3_prepare_v2(db, table_query, -1, &res, 0);    
     if (rc != SQLITE_OK) {
         fprintf(stderr, "Failed to create table: %s\n", sqlite3_errmsg(db));
-        sqlite3_close(db);
-        return;
+        return 1;
     }
     
     rc = sqlite3_step(res);
@@ -201,8 +199,7 @@ static void db_put_input(sqlite3* db, int year, int day, char* input)
     rc = sqlite3_prepare_v2(db, insert_query, -1, &res, 0);    
     if (rc != SQLITE_OK) {
         fprintf(stderr, "Failed to insert record: %s\n", sqlite3_errmsg(db));
-        sqlite3_close(db);
-        return;
+        return 1;
     }
 
     sqlite3_bind_int(res, 1, year);
@@ -213,7 +210,7 @@ static void db_put_input(sqlite3* db, int year, int day, char* input)
 
     sqlite3_finalize(res);
 
-    return;
+    return 0;
 }
 
 char* rudolf_get_input(int year, int day)
