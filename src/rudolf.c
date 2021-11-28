@@ -241,11 +241,11 @@ int rudolf_split(
     char*** dest,
     char* input,
     const char* delimiters,
-    size_t* size
+    size_t* count
 )
 {
     *dest = NULL;
-    *size = 0;
+    *count = 0;
 
     if (input == NULL) {
         return 1;
@@ -255,16 +255,16 @@ int rudolf_split(
     size_t offset = 0;
     while (offset < strlen(input)) {
         offset = offset + strcspn(input + offset, delimiters) + 1;
-        (*size)++;
+        (*count)++;
     }
 
-    char** strings = calloc(*size, sizeof(char*));
+    char** strings = calloc(*count, sizeof(char*));
     if (!strings) {
         return 1;
     }
 
     offset = 0;
-    for (size_t i = 0; i < *size; i++) {
+    for (size_t i = 0; i < *count; i++) {
         size_t len = strcspn(input + offset, delimiters);
         strings[i] = calloc(len + 1, sizeof(char));
         strncpy(strings[i], input + offset, len);
