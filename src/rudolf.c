@@ -1,9 +1,11 @@
 #include <stdlib.h>
-#include <string.h>
 #include <stdio.h>
 #include <sqlite3.h>
 #include <curl/curl.h>
 
+#include "rudolf.h"
+
+#define DB_NAME "rudolf.db"
 #define BASE_URL "https://adventofcode.com/%d/day/%d/input"
 #define COOKIEJAR "cookie.txt"
 
@@ -105,6 +107,23 @@ static char* api_get_input(int year, int day)
     return input;
 }
 
+static int db_init(sqlite3** db)
+{
+    int rc = sqlite3_open(DB_NAME, db);
+
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(*db));
+        sqlite3_close(*db);
+    }
+
+    return rc;
+}
+
+static int db_close(sqlite3* db)
+{
+    return sqlite3_close(db);
+}
+
 /**
   * @brief Retrieve puzzle input from local database
   * 
@@ -112,21 +131,12 @@ static char* api_get_input(int year, int day)
   * @param day
   * @returns Pointer to char buffer containing puzzle input, or NULL on failure
   */
-static char* db_get_input(int year, int day)
+static char* db_get_input(sqlite3* db, int year, int day)
 {
-    sqlite3* db;
-
-    int rc = sqlite3_open("input.db", &db);
-    
-    if (rc != SQLITE_OK) {
-        fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(db));
-        sqlite3_close(db);
-        return NULL;
-    }
-
     const char query[] = "SELECT input FROM puzzles WHERE year = ? AND day = ?";
     sqlite3_stmt* res;
-    rc = sqlite3_prepare_v2(db, query, -1, &res, 0);    
+
+    int rc = sqlite3_prepare_v2(db, query, -1, &res, 0);    
     if (rc != SQLITE_OK) {
         fprintf(stderr, "Failed to fetch data: %s\n", sqlite3_errmsg(db));
         sqlite3_close(db);
@@ -146,8 +156,7 @@ static char* db_get_input(int year, int day)
     }
     
     sqlite3_finalize(res);
-    sqlite3_close(db);
-    
+
     return input;
 }
 
@@ -158,18 +167,8 @@ static char* db_get_input(int year, int day)
   * @param day
   * @param input Pointer to char buffer containing puzzle input
   */ 
-static void db_put_input(int year, int day, char* input)
+static void db_put_input(sqlite3* db, int year, int day, char* input)
 {
-    sqlite3* db;
-
-    int rc = sqlite3_open("input.db", &db);
-    
-    if (rc != SQLITE_OK) {
-        fprintf(stderr, "Cannot open database: %s\n", sqlite3_errmsg(db));
-        sqlite3_close(db);
-        return;
-    }
-
     const char table_query[] = "CREATE TABLE IF NOT EXISTS puzzles (\
         year INTEGER NOT NULL,\
         day INTEGER NOT NULL,\
@@ -178,7 +177,7 @@ static void db_put_input(int year, int day, char* input)
     )";
 
     sqlite3_stmt* res;
-    rc = sqlite3_prepare_v2(db, table_query, -1, &res, 0);    
+    int rc = sqlite3_prepare_v2(db, table_query, -1, &res, 0);    
     if (rc != SQLITE_OK) {
         fprintf(stderr, "Failed to create table: %s\n", sqlite3_errmsg(db));
         sqlite3_close(db);
@@ -213,31 +212,62 @@ static void db_put_input(int year, int day, char* input)
     rc = sqlite3_step(res);
 
     sqlite3_finalize(res);
-    sqlite3_close(db);
 
     return;
 }
 
 char* rudolf_get_input(int year, int day)
 {
-    char* input = db_get_input(year, day);
+    sqlite3* db;
+    db_init(&db);
+
+    char* input = db_get_input(db, year, day);
     if (!input) {
         input = api_get_input(year, day);
         if (input) {
-            db_put_input(year, day, input);
+            db_put_input(db, year, day, input);
         }
     }
+
+    db_close(db);
 
     return input;
 }
 
-int main()
+int rudolf_split(
+    char*** dest,
+    char* input,
+    const char* delimiters,
+    size_t* size
+)
 {
-    char* input = rudolf_get_input(2020, 1);
-    if (input) {
-        printf("%s", input);
-        free(input);
+    *dest = NULL;
+    *size = 0;
+
+    if (input == NULL) {
+        return 1;
     }
 
-    return 0;
+    // count how many times delimiters occur in input
+    size_t offset = 0;
+    while (offset < strlen(input)) {
+        offset = offset + strcspn(input + offset, delimiters) + 1;
+        (*size)++;
+    }
+
+    char** strings = calloc(*size, sizeof(char*));
+    if (!strings) {
+        return 1;
+    }
+
+    offset = 0;
+    for (size_t i = 0; i < *size; i++) {
+        size_t len = strcspn(input + offset, delimiters);
+        strings[i] = calloc(len + 1, sizeof(char));
+        strncpy(strings[i], input + offset, len);
+        offset = offset + len + 1;
+    }
+    *dest = strings;
+
+    return 1;
 }
