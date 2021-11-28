@@ -1,6 +1,6 @@
 #pragma once
 
-#include <string.h>
+#include <stdint.h>
 
 /**
   * @brief Retrieve puzzle input for given year and day
@@ -28,9 +28,10 @@ int rudolf_split(
 );
 
 /**
- * @brief Measure execution time of a function without parameters
+ * @brief Measure execution time of a int64_t function with an input_t parameter
  * 
  * @param fn Pointer to function
+ * @param fn Function parameter
  * @return double Execution time in seconds
  */
-double rudolf_time_fn(void (*fn)());
+double rudolf_time_fn(int64_t (*fn)(char*), char* input);

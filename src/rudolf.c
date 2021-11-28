@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 #include <time.h>
 
 #include <sqlite3.h>
@@ -140,7 +141,6 @@ static char* db_get_input(sqlite3* db, int year, int day)
 
     int rc = sqlite3_prepare_v2(db, query, -1, &res, 0);    
     if (rc != SQLITE_OK) {
-        fprintf(stderr, "Failed to fetch data: %s\n", sqlite3_errmsg(db));
         return NULL;
     }
 
@@ -151,7 +151,7 @@ static char* db_get_input(sqlite3* db, int year, int day)
 
     char* input = NULL;
     if (rc == SQLITE_ROW) {
-        const char* value = (const char*) sqlite3_column_text(res, 0);
+        const char* value = (const char*) sqlite3_column_blob(res, 0);
         input = calloc(strlen(value) + 1, sizeof(char));
         strncpy(input, value, strlen(value));
     }
@@ -173,7 +173,7 @@ static int db_put_input(sqlite3* db, int year, int day, char* input)
     const char table_query[] = "CREATE TABLE IF NOT EXISTS puzzles (\
         year INTEGER NOT NULL,\
         day INTEGER NOT NULL,\
-        input TEXT NOT NULL,\
+        input BLOB NOT NULL,\
         PRIMARY KEY (year, day)\
     )";
 
@@ -206,7 +206,7 @@ static int db_put_input(sqlite3* db, int year, int day, char* input)
 
     sqlite3_bind_int(res, 1, year);
     sqlite3_bind_int(res, 2, day);
-    sqlite3_bind_text(res, 3, input, -1, SQLITE_STATIC);
+    sqlite3_bind_blob(res, 3, (const void*) input, -1, SQLITE_STATIC);
 
     rc = sqlite3_step(res);
 
@@ -223,17 +223,17 @@ char* rudolf_get_input(int year, int day)
         return NULL;
     }
 
-    char* input = db_get_input(db, year, day);
-    if (!input) {
-        input = api_get_input(year, day);
-        if (input) {
-            db_put_input(db, year, day, input);
+    char* data = db_get_input(db, year, day);
+    if (!data) {
+        data = api_get_input(year, day);
+        if (data) {
+            db_put_input(db, year, day, data);
         }
     }
 
     db_close(db);
 
-    return input;
+    return data;
 }
 
 int rudolf_split(
@@ -251,13 +251,14 @@ int rudolf_split(
     }
 
     // count how many times delimiters occur in input
+    size_t len = strlen(input);
     size_t offset = 0;
-    while (offset < strlen(input)) {
+    while (offset < len) {
         offset = offset + strcspn(input + offset, delimiters) + 1;
         (*count)++;
     }
 
-    char** strings = calloc(*count, sizeof(char*));
+    char** strings = malloc(*count * sizeof(char*));
     if (!strings) {
         return 1;
     }
@@ -266,7 +267,7 @@ int rudolf_split(
     for (size_t i = 0; i < *count; i++) {
         size_t len = strcspn(input + offset, delimiters);
         strings[i] = calloc(len + 1, sizeof(char));
-        strncpy(strings[i], input + offset, len);
+        memcpy(strings[i], input + offset, len);
         offset = offset + len + 1;
     }
     *dest = strings;
@@ -274,10 +275,10 @@ int rudolf_split(
     return 1;
 }
 
-double rudolf_time_fn(void (*fn)())
+double rudolf_time_fn(int64_t (*fn)(char*), char* input)
 {
     clock_t tick = clock();
-    fn();
+    fn(input);
     clock_t tock = clock();
     return (double) (tock - tick) / CLOCKS_PER_SEC;
 }
