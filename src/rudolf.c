@@ -219,7 +219,10 @@ static void db_put_input(sqlite3* db, int year, int day, char* input)
 char* rudolf_get_input(int year, int day)
 {
     sqlite3* db;
-    db_init(&db);
+    int db_status = db_init(&db);
+    if (db_status != 0) {
+        return NULL;
+    }
 
     char* input = db_get_input(db, year, day);
     if (!input) {
