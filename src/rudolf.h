@@ -27,6 +27,11 @@ int rudolf_split(
     size_t* count
 );
 
+typedef struct timed_t {
+    int64_t value;
+    double time;
+} timed_t;
+
 /**
  * @brief Measure execution time of a int64_t function with an input_t parameter
  * 
@@ -34,4 +39,4 @@ int rudolf_split(
  * @param fn Function parameter
  * @return double Execution time in seconds
  */
-double rudolf_time_fn(int64_t (*fn)(char*), char* input);
+timed_t* rudolf_time_fn(int64_t (*fn)(char*), char* input);

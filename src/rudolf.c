@@ -110,6 +110,12 @@ static char* api_get_input(int year, int day)
     return input;
 }
 
+/**
+ * @brief Initialise database conection
+ * 
+ * @param db Where to store sqlite3 pointer
+ * @return int SQLite3 status
+ */
 static int db_init(sqlite3** db)
 {
     int rc = sqlite3_open(DB_NAME, db);
@@ -122,6 +128,12 @@ static int db_init(sqlite3** db)
     return rc;
 }
 
+/**
+ * @brief Close database connection
+ * 
+ * @param db Pointer to sqlite3 struct
+ * @return int SQLite3 status
+ */
 static int db_close(sqlite3* db)
 {
     return sqlite3_close(db);
@@ -275,10 +287,17 @@ int rudolf_split(
     return 1;
 }
 
-double rudolf_time_fn(int64_t (*fn)(char*), char* input)
+timed_t* rudolf_time_fn(int64_t (*fn)(char*), char* input)
 {
+    timed_t* result = calloc(1, sizeof(timed_t));
+    if (!result) {
+        return NULL;
+    }
+
     clock_t tick = clock();
-    fn(input);
+    result->value = fn(input);
     clock_t tock = clock();
-    return (double) (tock - tick) / CLOCKS_PER_SEC;
+    result->time = (double) (tock - tick) / CLOCKS_PER_SEC;
+
+    return result;
 }
