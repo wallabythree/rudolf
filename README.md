@@ -19,4 +19,4 @@ int main()
 }
 ```
 
-You must store your Advent of Code session cookie as `cookie.txt` (in the [Netscape cookie file format](https://curl.se/docs/http-cookies.html)) in the working directory.
+You must store your Advent of Code session cookie as `cookie.txt` (in the [Netscape cookie file format](https://curl.se/docs/http-cookies.html)) in the working directory in order to retrieve your puzzle input from the API.
