@@ -1,5 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <time.h>
+
 #include <sqlite3.h>
 #include <curl/curl.h>
 
@@ -270,4 +272,12 @@ int rudolf_split(
     *dest = strings;
 
     return 1;
+}
+
+double rudolf_time_fn(void (*fn)())
+{
+    clock_t tick = clock();
+    fn();
+    clock_t tock = clock();
+    return (double) (tock - tick) / CLOCKS_PER_SEC;
 }
