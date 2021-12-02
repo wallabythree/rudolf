@@ -11,31 +11,41 @@ Little helper library for [Advent of Code](https://adventofcode.com/) in C. Requ
 ## Usage
 
 ```c
+#include <stdlib.h>
+#include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "rudolf.h"
 
+#define YEAR 2021
+#define DAY 1
+
+/**
+ * @brief Example solution. Returns string length.
+ * 
+ * @param input Char buffer with puzzle input
+ * @return int64_t with puzzle answer 
+ */
+int64_t part1(char* input)
+{
+    size_t len = 0;
+    while (input[len] != 0) {
+        len++;
+    }
+    return len;
+}
+
 int main()
 {
-    // get puzzle input as one long string
-    char* input = rudolf_get_input(2020, 8);
-    if (!input) {
-        return 1;
-    }
-    printf("%s", input);
-
-    // split puzzle input into rows, then free input
-    char** rows = NULL;
-    size_t size = 0;
-    rudolf_split(&rows, input, "\n", &size);
+    char* input = rudolf_get_input(YEAR, DAY);
+    timed_t* res1 = rudolf_time_fn(&part1, input);
     free(input);
 
-    // print and free each row, then free the rows array
-    for (size_t i = 0; i < size; i++) {
-        printf("%lu:\t%s\n", i, rows[i]);
-        free(rows[i]);
-    }
-    free(rows);
+    printf("Advent of Code %d day %d:\n", YEAR, DAY);
+    printf("\tpart1:\t%ld\t%.3f ms\n", res1->value, res1->time * 1000);
+
+    free(res1);
 
     return 0;
 }
