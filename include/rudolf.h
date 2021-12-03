@@ -259,13 +259,6 @@ char* rudolf_get_input(int year, int day)
 
     db_close(db);
 
-    // remove final newline character (if present)
-    size_t len = strlen(data);
-    if (len) {
-        if (data[len - 1] == '\n') {
-            data[len - 1] = 0;
-        }
-    }
     return data;
 }
 
