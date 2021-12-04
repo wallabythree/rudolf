@@ -3,7 +3,13 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+
+#ifdef _WIN32
+#include <windows.h>
+#include <profileapi.h>
+#else
 #include <time.h>
+#endif
 
 #include <sqlite3.h>
 #include <curl/curl.h>
@@ -300,10 +306,10 @@ int rudolf_split(
 
     offset = 0;
     for (size_t i = 0; i < *count; i++) {
-        size_t len = strcspn(input + offset, delimiters);
-        strings[i] = calloc(len + 1, sizeof(char));
-        memcpy(strings[i], input + offset, len);
-        offset = offset + len + 1;
+        size_t size = strcspn(input + offset, delimiters);
+        strings[i] = calloc(size + 1, sizeof(char));
+        memcpy(strings[i], input + offset, size);
+        offset = offset + size + 1;
     }
     *dest = strings;
 
@@ -324,10 +330,19 @@ timed_t* rudolf_time_fn(int64_t (*fn)(char*), char* input)
         return NULL;
     }
 
+#ifdef _WIN32
+    LARGE_INTEGER tick, tock, freq;
+    QueryPerformanceFrequency(&freq);
+    QueryPerformanceCounter(&tick);
+    result->value = fn(input);
+    QueryPerformanceCounter(&tock);
+    result->time = (double) (tock.QuadPart - tick.QuadPart) / freq.QuadPart;
+#else
     clock_t tick = clock();
     result->value = fn(input);
     clock_t tock = clock();
     result->time = (double) (tock - tick) / CLOCKS_PER_SEC;
+#endif
 
     return result;
 }
