@@ -13,6 +13,7 @@ Little helper library for [Advent of Code](https://adventofcode.com/) in C. Requ
 ```c
 #include <stdlib.h>
 #include <stdint.h>
+#include <inttypes.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -43,7 +44,7 @@ int main()
     free(input);
 
     printf("Advent of Code %d day %d:\n", YEAR, DAY);
-    printf("\tpart1:\t%ld\t%.3f ms\n", res1->value, res1->time * 1000);
+    printf("\tpart1:\t%" PRId64 "\t%.3f ms\n", res1->value, res1->time * 1000);
 
     free(res1);
 
