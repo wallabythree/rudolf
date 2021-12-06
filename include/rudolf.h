@@ -176,7 +176,7 @@ static char* db_get_input(sqlite3* db, int year, int day)
 
     char* input = NULL;
     if (rc == SQLITE_ROW) {
-        const char* value = (const char*) sqlite3_column_blob(res, 0);
+        const char* value = (const char*) sqlite3_column_text(res, 0);
         input = calloc(strlen(value) + 1, sizeof(char));
         memcpy(input, value, strlen(value));
     }
@@ -198,7 +198,7 @@ static int db_put_input(sqlite3* db, int year, int day, char* input)
     const char table_query[] = "CREATE TABLE IF NOT EXISTS puzzles (\
         year INTEGER NOT NULL,\
         day INTEGER NOT NULL,\
-        input BLOB NOT NULL,\
+        input TEXT NOT NULL,\
         PRIMARY KEY (year, day)\
     )";
 
@@ -231,7 +231,7 @@ static int db_put_input(sqlite3* db, int year, int day, char* input)
 
     sqlite3_bind_int(res, 1, year);
     sqlite3_bind_int(res, 2, day);
-    sqlite3_bind_blob(res, 3, (const void*) input, -1, SQLITE_STATIC);
+    sqlite3_bind_text(res, 3, input, -1, SQLITE_STATIC);
 
     rc = sqlite3_step(res);
 
