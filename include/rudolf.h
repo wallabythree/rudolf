@@ -18,6 +18,7 @@
 
 #define DB_NAME "rudolf.db"
 #define BASE_URL "https://adventofcode.com/%d/day/%d/input"
+#define USER_AGENT "rudolf 0.1 (https://github.com/wallabythree/rudolf)"
 #define COOKIEJAR "cookie.txt"
 
 typedef struct timed_t {
@@ -82,6 +83,7 @@ static char* api_get_input(int year, int day)
     snprintf(url, url_length, BASE_URL, year, day);
 
     Response res = { 0 }; 
+    curl_easy_setopt(curl, CURLOPT_USERAGENT, USER_AGENT);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void*) &res);
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &write_cb);
     curl_easy_setopt(curl, CURLOPT_URL, url);
